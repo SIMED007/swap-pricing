@@ -24,7 +24,7 @@ swap <- function(FRA,notional=1000000, marginInBps=0, frequency=6,type='IR')
   pvRates <- floatingRates/discounts
   sumPVrates <- sum(pvRates)
   
-  sfr <- 0
+  sfr <- floatingRates[1]
   diff <- sfr*sumDisc-sumPVrates
   while(abs(diff) >= 0.000001)
   {
