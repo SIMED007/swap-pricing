@@ -11,7 +11,6 @@ swap <- function(FRA,notional=1000000, marginInBps=0, frequency=6,type='IR')
   forwardRates <- FRA[,2]
   obs <- nrow(FRA)
   discounts <-numeric(obs)
-  #pvRates <- numeric(obs)
   floatingRates <- (forwardRates + marginInBps)/10000
   freq <- frequency/12
   discounts[1] <- 1 + freq*floatingRates[1]
