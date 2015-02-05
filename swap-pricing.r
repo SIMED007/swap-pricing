@@ -1,5 +1,5 @@
 ## program for pricing interest rate or currency swaps
-swap <- function(FRA,notional=1000000, marginInBps=0, frequency=6,type='IR')
+swap <- function(FRA,notional=1000000, marginInBps=0, frequency=6,type='IR',start=0)
 {
   #type must be either IR or currency
   #FRA must be table containing enough rates for entire length of swap
@@ -19,11 +19,11 @@ swap <- function(FRA,notional=1000000, marginInBps=0, frequency=6,type='IR')
     discounts[i] <- (1+freq*floatingRates[i])*discounts[i-1]
   }
   
-  sumDisc <- sum(1/discounts)
+  sumDisc <- sum(1/discounts[(start+1):obs])
   pvRates <- floatingRates/discounts
-  sumPVrates <- sum(pvRates)
+  sumPVrates <- sum(pvRates[(start+1):obs])
   
-  sfr <- floatingRates[1]
+  sfr <- floatingRates[start+1]
   diff <- sfr*sumDisc-sumPVrates
   while(abs(diff) >= 0.000001)
   {
@@ -38,5 +38,12 @@ swap <- function(FRA,notional=1000000, marginInBps=0, frequency=6,type='IR')
     diff <- sfr*sumDisc-sumPVrates
   }
   
-  list(SFR=sfr*10000,floatingRates=floatingRates*10000,fixedPayment=sfr*notional*freq)
+  fix <- rep(sfr*notional*freq,obs)
+  float <- floatingRates*notional*freq
+  schedule <- cbind(FRA[,1],float,fix)
+  if(start >0)
+  {
+    schedule[1:(start),2:3] = 0
+  }
+  list(SFR=sfr*10000,schedule=schedule)
 }
