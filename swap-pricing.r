@@ -1,5 +1,5 @@
 ## program for pricing interest rate or currency swaps
-swap <- function(FRA,notional=1000000,marginInBps=0, exchange,frequency=6,type='IR',start=0,tol=1e-7)
+swap <- function(FRA,notional=1000000,marginInBps=0, exchange,frequency=6,type='IR',start=0,swaption=FALSE,swaptionArgs)
 {
   #type must be either IR or currency
   #FRA must be table containing enough rates for entire length of swap
@@ -33,7 +33,29 @@ swap <- function(FRA,notional=1000000,marginInBps=0, exchange,frequency=6,type='
     {
       schedule[1:(start),2:3] = 0
     }
-    output<-list(SFR=sfr*10000,schedule=schedule)
+    
+    if(swaption==TRUE)
+    {
+      annualSFR <- sfr/freq
+      pStrike <- swaptionArgs$payerStrike/10000
+      rStrike <- swaptionArgs$recStrike/10000
+      vol <- swaptionArgs$volatility
+      d1 <- log((annualSFR/pStrike)+freq*(vol*vol)*(start/2))/(vol*sqrt(start/2))
+      d2 <- d1-(vol*sqrt(start/2))
+      prem_pay <- notional*freq*sumDisc*(annualSFR*pnorm(d1)-pStrike*pnorm(d2))
+      bpCost_pay <- 10000*prem_pay/notional
+
+      d1 <- log((annualSFR/rStrike)+freq*(vol*vol)*(start/2))/(vol*sqrt(start/2))
+      d2 <- d1-(vol*sqrt(start/2))
+      prem_rec <- notional*freq*sumDisc*(annualSFR*pnorm(-d1)-rStrike*pnorm(-d2))
+      bpCost_rec <- 10000*prem_rec/notional
+      
+      output<-list(SFR=annualSFR*10000,schedule=schedule,payerPremium=prem_pay,payerCost = bpCost_pay,receiverPremium=-prem_rec,receiverCost = -bpCost_rec)
+
+    }
+    else{
+      output<-list(SFR=sfr*10000,schedule=schedule)
+    }
   }
   else if(type=="currency")
   {
@@ -73,5 +95,6 @@ swap <- function(FRA,notional=1000000,marginInBps=0, exchange,frequency=6,type='
 #     }
     output <- list(SFR1=sfr1*10000,SFR2=sfr2*10000, schedule1=schedule1,schedule2=schedule2 )
   }
+
   output
 }
